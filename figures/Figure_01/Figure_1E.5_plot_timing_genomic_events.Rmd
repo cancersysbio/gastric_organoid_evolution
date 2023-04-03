@@ -1,0 +1,68 @@
+---
+title: "Figure 1e - Summary plot of CNA order"
+author: "Aziz Khan"
+date: "3/14/2022"
+output: html_document
+---
+
+**A Rmarkdown to create Figure 1e **
+
+```{r message=FALSE}
+library(stats)
+library(reshape2)
+library(ggplot2)
+library(forcats)
+library(ggpubr)
+library(cowplot)
+```
+
+
+### load the data 
+
+```{r}
+setwd(file.path("/Users/kasper.karlsson/_Stanford/Papers/Evolution_paper/GitHub_Reproductions/Main/Figure_1/PLOTS/Figure_1E_Timing_CNA"))
+cnv_timing_df = read.csv("CNV_timing_first_ocurrance_per_sample.csv", header=TRUE)
+
+### ANNOTATE EARLY, MID, LATE
+cnv_timing_df$type <- "Late"
+cnv_timing_df$type[cnv_timing_df$Aberration %in% c("3p-","9p-","FHIT")] <- "Early"
+cnv_timing_df$type[cnv_timing_df$Aberration %in% c("4p-","4q-","18q-","3q+","14q+","CDKN2A")] <- "Mid"
+cnv_timing_df$type <- factor(cnv_timing_df$type, levels = c("Early","Mid","Late"))
+
+### REORDER ABERRATIONS, EARLIEST EVENTS FIRST
+fac <- with(cnv_timing_df, reorder(Aberration, Day, median, order = TRUE))
+cnv_timing_df$Aberration <- factor(cnv_timing_df$Aberration, levels = levels(fac))
+
+### REMOVE ABERRATIONS OCCURRING IN LESS THAN TWO CULTURES
+chrArmFreq <- as.data.frame(apply(cnv_timing_df[c("Aberration")], 2, table))
+chrArmFreq <- subset(chrArmFreq,Aberration > 1)
+m1freqArm <- rownames(chrArmFreq)
+cnv_timing_df_sub <- subset(cnv_timing_df,Aberration %in% m1freqArm)
+
+head(cnv_timing_df_sub)
+
+```
+
+
+### plot the figure 
+```{r fig.height=5, fig.width=6}
+
+cna_box_plot <- ggplot(cnv_timing_df_sub, aes(Aberration, Day))+
+  stat_boxplot( aes(Aberration, Day), geom='errorbar', linetype=1, width=0.5) +
+  geom_boxplot( aes(Aberration, Day),outlier.shape=NA, size=0.3) + #remove outliers since we add them with geom_jitter
+  scale_fill_manual(values=c("#04B04F","#843E1C","#7D7D7D")) +
+  scale_color_manual(values=c("#04B04F","#843E1C","#6A2A58")) +
+  geom_dotplot( aes(fill=Donor),
+                binaxis='y', 
+                stackdir='center',
+                alpha=1,
+                dotsize=0.5) +
+  scale_alpha_manual(values=c(1,0.1)) +
+  geom_jitter(width = 0.4,size=1) + 
+  theme_cowplot(12)
+
+cna_box_plot
+### SAVE FIGURE
+#ggsave("~/Downloads/summary_CNA_order.pdf",width=10,height=5,unit = "in", pointsize=0.1)
+#ggsave("~/Downloads/summary_CNA_order.svg",width=5,height=5,unit = "in", pointsize=0.1)
+```

@@ -1,0 +1,147 @@
+---
+title: "Figure 3e - UpSet plot"
+author: "Aziz Khan"
+date: "3/14/2022"
+output: html_document
+---
+
+**A Rmarkdown to create the UpSet plot of differentially expressed genes - Figure 3e **
+
+```{r message=FALSE}
+library(ggplot2)
+library(UpSetR)
+library(ComplexHeatmap)
+library(tibble)
+library(dplyr)
+```
+
+
+#### Set working directory and read the gene sets
+```{r}
+setwd(file.path("/Users/azizk/stanford/tools/gastric_organoid_evolution/figures/Figure_03"))
+diff_exp_df <- data.frame()
+colones <- c("D1C1","D1C2","D1C3","D2C2","D2C3","D3C2")
+for(clone in colones){
+  temp_df <- read.table(paste0("data/markers_",clone,"_LATE_vs_EARLY.txt"),sep="\t",header=TRUE)
+  temp_df <- tibble::rownames_to_column(temp_df, "Gene")
+  temp_df$Clone <- clone
+  diff_exp_df <- rbind(diff_exp_df, temp_df)
+}
+```
+
+#### create a list of significantly upregulated genes 
+```{r}
+##set the thresholds 
+p_val_adj_cutoff <- 0.05
+avg_log2FC_cutoff <- 0
+
+upreg_list <- list(
+  "D1C1" = diff_exp_df %>% 
+    filter(Clone == "D1C1", avg_log2FC > avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) 
+  %>% pull(Gene),
+  "D1C2" = diff_exp_df %>% 
+    filter(Clone == "D1C2", avg_log2FC > avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) 
+  %>% pull(Gene),
+  "D1C3" = diff_exp_df %>% 
+    filter(Clone == "D1C3", avg_log2FC > avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) 
+  %>% pull(Gene),
+  "D2C2" = diff_exp_df %>% 
+    filter(Clone == "D2C2", avg_log2FC > avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) 
+  %>% pull(Gene),
+  "D2C3" = diff_exp_df %>% 
+    filter(Clone == "D2C3", avg_log2FC > avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) 
+  %>% pull(Gene),
+  "D3C2" = diff_exp_df %>% 
+    filter(Clone == "D3C2", avg_log2FC > avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) 
+  %>% pull(Gene)
+)
+```
+
+#### create a list of significantly downregulated genes
+```{r}
+downreg_list <- list(
+  "D1C1" = diff_exp_df %>% 
+    filter(Clone == "D1C1", avg_log2FC < avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) %>% 
+    pull(Gene),
+  "D1C2" = diff_exp_df %>% 
+    filter(Clone == "D1C2", avg_log2FC < avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) %>% 
+    pull(Gene),
+  "D1C3" = diff_exp_df %>% 
+    filter(Clone == "D1C3", avg_log2FC < avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) %>% 
+    pull(Gene),
+  "D2C2" = diff_exp_df %>% 
+    filter(Clone == "D2C2", avg_log2FC < avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) %>% 
+    pull(Gene),
+  "D2C3" = diff_exp_df %>% 
+    filter(Clone == "D2C3", avg_log2FC < avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) %>% 
+    pull(Gene),
+  "D3C2" = diff_exp_df %>% 
+    filter(Clone == "D3C2", avg_log2FC < avg_log2FC_cutoff, p_val_adj < p_val_adj_cutoff) %>% 
+    pull(Gene)
+)
+```
+
+
+#### UpSet plot for combination degree > 4
+```{r}
+m_up = make_comb_mat(upreg_list)
+m_down = make_comb_mat(downreg_list)
+
+## uncomment below line and dev.off() to save plot as pdf
+#pdf("Figure3I.pdf", width = 6, height = 4, onefile=FALSE, useDingbats=FALSE)
+  UpSet(t(m_up[comb_degree(m_up) > 4]),
+      column_title = "Upregulated",
+      lwd =1.8,
+      set_order = colones,
+      ) +
+  UpSet(t(m_down[comb_degree(m_down) > 4]),
+        column_title = "Downregulated",
+        lwd =1.8,
+        set_order = colones,
+        )
+#dev.off()
+  
+```
+
+
+#### All combinations
+
+```{r fig.width=4,fig.height=8}
+## uncomment below line and dev.off() to save plot as pdf
+#pdf("Figure3I_full_upreg.pdf", width = 3.5, height = 9, onefile=FALSE, useDingbats=FALSE)
+UpSet(t(m_up),
+      column_title = "Upregulated",
+      lwd =1.8,
+      set_order = colones,
+) 
+
+#dev.off()
+
+#pdf("Figure3I_full_downreg.pdf", width = 3.5, height = 9, onefile=FALSE, useDingbats=FALSE)
+UpSet(t(m_down),
+        column_title = "Downregulated",
+        lwd =1.8,
+        set_order = colones,
+  ) 
+#dev.off()
+
+```
+
+#### Get the number of common up and downregulated genes across donors/clones
+```{r}
+upreg_common_genes <- Reduce(intersect, upreg_list)
+length(upreg_common_genes)
+as.data.frame(upreg_common_genes)
+
+downreg_common_genes <- Reduce(intersect, downreg_list)
+length(downreg_common_genes)
+as.data.frame(downreg_common_genes)
+
+write.table(as.data.frame(upreg_common_genes),"data/Merged_genes_upregulation.txt", quote = FALSE, sep="\t", row.names = FALSE)
+write.table(as.data.frame(downreg_common_genes),"data/Merged_genes_downregulation.txt",quote = FALSE, sep="\t", row.names = FALSE)
+```
+
+```{r}
+sessionInfo()
+```
+

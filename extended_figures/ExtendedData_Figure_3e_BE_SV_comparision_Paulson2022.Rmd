@@ -1,0 +1,131 @@
+---
+title: "Extended Data Figure 3e - SVs comparisions with Barrett's esophagus data from Paulson et al. 2022"
+author: "Aziz Khan"
+date: "3/14/2022"
+output: html_document
+---
+
+**A Rmarkdown to createExtended Data Figure 3e **
+
+```{r message=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(cowplot)
+library(dplyr)
+library(ggpubr)
+```
+
+
+#### Set working directory and read the gene sets
+
+```{r}
+gcstage_colors <- c("#e19a3e","#2e3180","#6c2b58")
+
+Barretts_svs <- read.delim("~/stanford/projects/organoid_wgs/bin/ED_figures/data/Paulson2022_fig8a_supp_table.tsv")
+head(Barretts_svs)
+
+Barretts_svs_tp <- read.delim(paste0("~/stanford/projects/organoid_wgs/bin/ED_figures/data/Paulson2022_burden_timepoints.tsv"))
+
+gastric_svs <- read.delim(paste0("~/stanford/projects/organoid_wgs/bin/ED_figures/data/gastric_sv_burden.tsv"))
+
+gastric_svs <- spread(gastric_svs, Type, Count)
+gastric_svs <- mutate(gastric_svs, Count=(DEL+DUP+INV+TRA))
+
+gastric_svs$Timepoint <- gsub("d", "",gastric_svs$Timepoint)
+gastric_svs$Timepoint <- gsub("MID", 300,gastric_svs$Timepoint)
+gastric_svs$Timepoint <- gsub("LATE", 500,gastric_svs$Timepoint)
+gastric_svs$Timepoint <- gsub("EARLY", 100,gastric_svs$Timepoint)
+
+gastric_svs <- gastric_svs %>% mutate(Sample_type=case_when(
+  between(Timepoint, 0, 200) ~ "Early",
+  between(Timepoint, 201, 400) ~ "Mid",
+  between(Timepoint, 401, 900) ~ "Late",
+  TRUE ~ NA_character_
+  ))
+
+head(gastric_svs)
+
+## Select only late
+labels_gastric_svs_late <-c("D2_C2_LATE", "D2_C3_LATE","D3_C1_LATE", "D3_C2_LATE", "D3_C3_LATE")
+
+gastric_svs_merged <- rbind(gastric_svs %>% dplyr::select(Sample_type, Count, Patient, Sample_ID=Sample)
+                            #%>% 
+                            #  filter(Sample_ID %in% labels_gastric_svs_late)
+                            ,
+      Barretts_svs %>% dplyr::select(Sample_type, Count=Count, Patient=Patient_ID, Sample_ID)
+)
+
+#gastric_svs_merged$Sample_type <- factor(gastric_svs_merged$Sample_type, levels = c("Early","Mid","Late","Barrett's_NCO","Barrett's_CO","ESAD-UK"))
+gastric_svs_merged$Sample_type <- factor(gastric_svs_merged$Sample_type, levels = c("Early","Mid","Late","NCO","CO"))
+
+
+head(gastric_svs_merged)
+
+labels_gastric_svs <- gastric_svs %>% filter(Sample_type == "Late")
+labels_gastric_svs <- unique(labels_gastric_svs$Sample)
+
+
+```
+
+
+```{r}
+Barretts_svs_CO <- ggboxplot(Barretts_svs_tp %>% filter(Cancer_Outcome_Status == "CO"), x = "Timepoint", y = "Count_SV",
+                color = "Timepoint",
+                add = "jitter",
+                #facet.by="Cancer_Outcome_Status",
+                #ylim = c(0, 460)
+                ) +
+  stat_compare_means(comparisons = list(c("T1", "T2"))) +
+  labs(x="", y = "Number of SVs")  + stat_summary(fun=mean, geom="line", colour = "#0072B2", size=1, aes(group=1)) + stat_summary(fun=mean, size=4, colour = "#0072B2", geom="point") +
+  stat_summary(fun=median, geom="line", colour = "#009E73", size=1, aes(group=1)) + stat_summary(fun=median, size=4, colour = "#009E73", geom="point")
+
+Barretts_svs_CO
+
+Barretts_svs_NCO <- ggboxplot(Barretts_svs_tp %>% filter(Cancer_Outcome_Status == "NCO"), x = "Timepoint", y = "Count_SV",
+                color = "Timepoint",
+                add = "jitter",
+                #facet.by="Cancer_Outcome_Status",
+                #ylim = c(0, 460)
+                ) +
+  stat_compare_means(comparisons = list(c("T1", "T2"))) +
+  labs(x="", y = "Number of SVs")  + stat_summary(fun=mean, geom="line", colour = "#0072B2", size=1, aes(group=1)) + stat_summary(fun=mean, size=4, colour = "#0072B2", geom="point") +
+  stat_summary(fun=median, geom="line", colour = "#009E73", size=1, aes(group=1)) + stat_summary(fun=median, size=4, colour = "#009E73", geom="point")
+
+Barretts_svs_NCO
+```
+
+
+```{r}
+
+head(gastric_svs)
+
+gastric_svs$Sample_type <- factor(gastric_svs$Sample_type, levels = c("Early","Mid","Late"))
+gastric_svs$Count_log2 <- log2(gastric_svs$Count)
+
+sv_gp_el <- ggboxplot(gastric_svs %>% filter( Sample_type != 'Mid'), x = "Sample_type", y = "Count",
+                color = "Sample_type", add = "jitter", palette=gcstage_colors[c(1,3)],
+                #shape = "Sample_type",
+                #label = "Sample",
+                #label.select= labels_gastric_svs_late,
+                font.label = list(size = 6),
+                #ylim = c(0, 460)
+                ) +
+  stat_compare_means(comparisons = list(c("Late", "Early"))) +
+  labs(x="", y = "Number of SVs") + stat_summary(fun=mean, geom="line", colour = "#0072B2", size=1, aes(group=1)) + stat_summary(fun=mean, size=4, colour = "#0072B2", geom="point") +
+  stat_summary(fun=median, geom="line", colour = "#009E73", size=1, aes(group=1)) + stat_summary(fun=median, size=4, colour = "#009E73", geom="point")
+
+sv_gp_el
+
+```
+
+
+
+```{r}
+
+ggarrange(Barretts_svs_NCO, Barretts_svs_CO, sv_gp_el, labels="AUTO", widths=c(1,1,1), ncol = 3)
+
+#ggsave(filename = paste0(gorg_project_path, "sv_burden_gastric_vs_Barretts_TP_EL.pdf"), ggarrange(Barretts_svs_NCO, Barretts_svs_CO, sv_gp_el, labels="AUTO", widths=c(1,1,1), ncol = 3))
+
+```
+
+
