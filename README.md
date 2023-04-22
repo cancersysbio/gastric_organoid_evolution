@@ -1,5 +1,4 @@
-### Repository of publication:
-### *Deterministic evolution and stringent selection during pre-neoplasia (Karlsson et al., 2023)*
+### Repository of publication: *Deterministic evolution and stringent selection during pre-neoplasia (Karlsson et al., 2023)*
 
 ![GraphicalAbstract](https://github.com/cancersysbio/gastric_organoid_evolution/blob/main/GraphicalAbstract_040722_AK.png?raw=true)
 
