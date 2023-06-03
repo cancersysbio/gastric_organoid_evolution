@@ -27,7 +27,7 @@ Metadata and counts, as well as processed seurat objects available on Zenodo htt
 WGS, sWGS and scRNA-seq data will be available via [dbGAP (phs003249.v1.p1)](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs003249.v1.p1) and Barcode-seq data is available via [SRA (PRJNA838456)](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA838456/).
 
 ## :white_check_mark: Citation
-Kasper Karlsson, Moritz J. Przybilla, Eran Kotler, Aziz Khan, Hang Xu, Kremena Karagyozova, Alexandra Sockell, Wing H. Wong, Katherine Liu, Amanda Mah, Yuan-Hung Lo, Bingxin Lu, Kathleen E. Houlahan, Zhicheng Ma, Carlos J. Suarez, Chris P. Barnes, Calvin J. Kuo, Christina Curtis. **Deterministic evolution and stringent selection during pre-neoplasia**, *bioRxiv 2022*; doi: https://doi.org/10.1101/2022.04.09.487529
+Kasper Karlsson, Moritz J. Przybilla, Eran Kotler, Aziz Khan, Hang Xu, Kremena Karagyozova, Alexandra Sockell, Wing H. Wong, Katherine Liu, Amanda Mah, Yuan-Hung Lo, Bingxin Lu, Kathleen E. Houlahan, Zhicheng Ma, Carlos J. Suarez, Chris P. Barnes, Calvin J. Kuo, Christina Curtis. **Deterministic evolution and stringent selection during pre-neoplasia**, *Nature* (2023); doi: [https://doi.org/10.1101/2022.04.09.487529](https://doi.org/10.1038/s41586-023-06102-8)
 
 ## :envelope: Contact 
 
